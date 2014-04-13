@@ -1,0 +1,484 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>adaboost</title><meta name="generator" content="MATLAB 8.1"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2014-04-13"><meta name="DC.source" content="adaboost.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, tt, code { font-size:12px; }
+pre { margin:0px 0px 20px; }
+pre.error { color:red; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#1">Adaboost Implementation for Viola Jones Algorithm</a></li><li><a href="#2">A set of all Haar Classifiers to be used in this implementation</a></li><li><a href="#3">Given</a></li><li><a href="#4">1st step Initialisation</a></li><li><a href="#6">2nd step Main Adaboost Loop</a></li><li><a href="#7">3rd step. Make a strong classifier</a></li></ul></div><h2>Adaboost Implementation for Viola Jones Algorithm<a name="1"></a></h2><p>what has to be done is : for each interation, calculate the least error for all the features. the feature having the least error for that iteration among all the other features wins. we calculate the weight of this feature. a classifier is nothing but a convlolution with a specific feature vector.</p><pre class="codeinput"><span class="comment">%data_gen() should be dependent on the haar classifier used</span>
+<span class="comment">%data_gen(A) should be the actual thing to be used here.</span>
+</pre><h2>A set of all Haar Classifiers to be used in this implementation<a name="2"></a></h2><pre class="codeinput">A=cell(10,1);
+
+<span class="comment">%have some haar classifiers.</span>
+
+
+A{1}=[ -1,-1,-1;
+    -1,-1,-1;
+    -1,-1,-1;
+    +1,+1,+1;
+    +1,+1,+1;
+    +1,+1,+1];
+
+A{2}=[ -1,-1,-1,-1,-1,-1;
+    -1,-1,-1,-1,-1,-1;
+    -1,-1,-1,-1,-1,-1;
+    +1,+1,+1,+1,+1,+1;
+    +1,+1,+1,+1,+1,+1;
+    +1,+1,+1,+1,+1,+1];
+
+
+A{3}= [ -1,-1,-1,-1,-1,-1,-1,-1,-1;
+    -1,-1,-1,-1,-1,-1,-1,-1,-1;
+    -1,-1,-1,-1,-1,-1,-1,-1,-1;
+    +1,+1,+1,+1,+1,+1,+1,+1,+1;
+    +1,+1,+1,+1,+1,+1,+1,+1,+1;
+    +1,+1,+1,+1,+1,+1,+1,+1,+1];
+
+A{4}=[ -1,-1,+1,+1;
+    -1,-1,+1,+1;
+    -1,-1,+1,+1;
+    -1,-1,+1,+1;
+    -1,-1,+1,+1;
+    -1,-1,+1,+1;
+    -1,-1,+1,+1;
+    -1,-1,+1,+1];
+
+A{5}=[ -1,-1,-1,+1,+1,+1;
+    -1,-1,-1,+1,+1,+1;
+    -1,-1,-1,+1,+1,+1;
+    -1,-1,-1,+1,+1,+1;
+    -1,-1,-1,+1,+1,+1;
+    -1,-1,-1,+1,+1,+1;
+    -1,-1,-1,+1,+1,+1;
+    -1,-1,-1,+1,+1,+1];
+
+A{6}=[ -1,-1,-1,-1;
+    -1,-1,-1,-1;
+    -1,-1,-1,-1;
+    -1,-1,-1,-1;
+    +1,+1,+1,+1;
+    +1,+1,+1,+1;
+    +1,+1,+1,+1;
+    +1,+1,+1,+1];
+
+A{7}=[ +1,-1,-1,+1;
+    +1,-1,-1,+1;
+    +1,-1,-1,+1;
+    +1,-1,-1,+1;
+    +1,-1,-1,+1;
+    +1,-1,-1,+1;
+    +1,-1,-1,+1;
+    +1,-1,-1,+1];
+
+A{8}=[ +1,+1,-1,-1,+1,+1;
+    +1,+1,-1,-1,+1,+1;
+    +1,+1,-1,-1,+1,+1;
+    +1,+1,-1,-1,+1,+1;
+    +1,+1,-1,-1,+1,+1;
+    +1,+1,-1,-1,+1,+1;
+    +1,+1,-1,-1,+1,+1;
+    +1,+1,-1,-1,+1,+1];
+
+A{9}=[ +1,+1,-1,-1,-1,+1,+1;
+    +1,+1,-1,-1,-1,+1,+1;
+    +1,+1,-1,-1,-1,+1,+1;
+    +1,+1,-1,-1,-1,+1,+1;
+    +1,+1,-1,-1,-1,+1,+1;
+    +1,+1,-1,-1,-1,+1,+1;
+    +1,+1,-1,-1,-1,+1,+1;
+    +1,+1,-1,-1,-1,+1,+1];
+
+A{10}=[ +1,+1,+1,-1,-1,-1,+1,+1,+1;
+    +1,+1,+1,-1,-1,-1,+1,+1,+1;
+    +1,+1,+1,-1,-1,-1,+1,+1,+1;
+    +1,+1,+1,-1,-1,-1,+1,+1,+1;
+    +1,+1,+1,-1,-1,-1,+1,+1,+1;
+    +1,+1,+1,-1,-1,-1,+1,+1,+1;
+    +1,+1,+1,-1,-1,-1,+1,+1,+1;
+    +1,+1,+1,-1,-1,-1,+1,+1,+1];
+</pre><h2>Given<a name="3"></a></h2><pre class="codeinput"><span class="comment">%  we are given example images in face and non-face folder. +1 represents</span>
+<span class="comment">% the face image and -1 represents the non-face images.</span>
+<span class="comment">% see the attached training images folders in the current directory.</span>
+</pre><h2>1st step Initialisation<a name="4"></a></h2><pre class="codeinput"><span class="comment">%weights are initialized.</span>
+l=200; <span class="comment">%number of face images.</span>
+m=400; <span class="comment">%number of non-face images.</span>
+<span class="comment">% weights for face images = 1/(2*l)</span>
+<span class="comment">% weights for non-face images = 1/(2*m)</span>
+<span class="comment">%group the weights together.</span>
+weights=[ones(l,1)./(2*l);ones(m,1)./(2*m)];
+</pre><h2>2nd step Main Adaboost Loop<a name="6"></a></h2><pre class="codeinput"><span class="keyword">for</span> t=1:3
+
+    <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+    <span class="comment">%normalise the weights.</span>
+    weights=weights./(sum(weights));
+    <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+
+
+    <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+    error_list=zeros(1,length(A));
+    beta_list=zeros(1,length(A));
+    threshold=zeros(1,length(A));
+    polarity_list=zeros(1,length(A));
+
+
+    <span class="comment">%select the best weak classifier with respect to the current weights.</span>
+    <span class="keyword">for</span> i=1:length(A)
+
+        [facedata,nonfacedata, ]=data_gen(A{i});
+
+        data=[facedata;nonfacedata]';
+
+        <span class="comment">% we will plot the data.</span>
+        figure(i)
+        hold <span class="string">on</span>;
+        plot(facedata(:,1),0,<span class="string">'*g'</span>,<span class="string">'MarkerSize'</span>,16);
+        plot(nonfacedata(:,1),0,<span class="string">'.r'</span>,<span class="string">'MarkerSize'</span>,16);
+        axis([-3 3 -0.5 0.5]);
+
+
+        <span class="comment">%perform pocket on the data obtained from the present haar feature.</span>
+        <span class="comment">%[x,error, polarity]= best_classifier(data, weights);</span>
+        [x,error, polarity]= optimal(data, weights);
+        beta=(error/(1-error));
+
+
+        hold <span class="string">off</span>;
+        error_list(i)=error;
+        beta_list(i)=beta;
+        threshold(i)=x;
+        polarity_list(i)=polarity;
+
+        <span class="comment">%for a polarity  value of 1, the images on the right side of threshold are faces</span>
+        <span class="comment">%for a polarity value of 2, the images on the left side of threshold are</span>
+        <span class="comment">%faces</span>
+
+    <span class="keyword">end</span>
+    <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+
+
+    <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+    <span class="comment">%form/define the classifier</span>
+    <span class="comment">%a classifier is a haarfeature,threshold,polarity combination</span>
+
+
+    [~,best_classifier_index]=min((error_list));
+    theta = (threshold(best_classifier_index));
+    feature = A{best_classifier_index};
+    classifier_polarity = polarity_list(best_classifier_index);
+    classifier_beta=beta_list(best_classifier_index);
+    alpha = log(1/classifier_beta);
+
+    field1=<span class="string">'Feature'</span>;
+    field2=<span class="string">'Threshold'</span>;
+    field3=<span class="string">'Polarity'</span>;
+    field4=<span class="string">'Alpha'</span>;
+
+    s(t) = struct(field1,feature,field2,theta,field3,classifier_polarity,field4,alpha);
+    <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+
+
+
+    <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+    <span class="comment">%update the respective weights of the misclassified points.</span>
+    [facedata,nonfacedata, ]=data_gen(A{best_classifier_index});
+    data=[facedata;nonfacedata]';
+    <span class="keyword">if</span> classifier_polarity==1
+        classifier_output=sign(data(1,:)-theta);
+    <span class="keyword">else</span>
+        classifier_output=sign(theta-data(1,:));
+    <span class="keyword">end</span>
+    classifier_output(find(classifier_output==-1))=0;
+
+
+    weights=weights.*(classifier_beta.^(classifier_output))';
+
+    <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+
+    A(best_classifier_index)=[];
+
+
+
+<span class="keyword">end</span>
+</pre><img vspace="5" hspace="5" src="adaboost_01.png" alt=""> <img vspace="5" hspace="5" src="adaboost_02.png" alt=""> <img vspace="5" hspace="5" src="adaboost_03.png" alt=""> <img vspace="5" hspace="5" src="adaboost_04.png" alt=""> <img vspace="5" hspace="5" src="adaboost_05.png" alt=""> <img vspace="5" hspace="5" src="adaboost_06.png" alt=""> <img vspace="5" hspace="5" src="adaboost_07.png" alt=""> <img vspace="5" hspace="5" src="adaboost_08.png" alt=""> <img vspace="5" hspace="5" src="adaboost_09.png" alt=""> <img vspace="5" hspace="5" src="adaboost_10.png" alt=""> <h2>3rd step. Make a strong classifier<a name="7"></a></h2><p>Unimplemented now. form the strong classifier by using the alphas and the classifier from the 2nd step.</p><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2013a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Adaboost Implementation for Viola Jones Algorithm
+% what has to be done is : for each interation, calculate the least error
+% for all the features. the feature having the least error for that
+% iteration among all the other features wins. we calculate the weight of
+% this feature. a classifier is nothing but a convlolution with a specific
+% feature vector.
+
+%data_gen() should be dependent on the haar classifier used
+%data_gen(A) should be the actual thing to be used here.
+
+%% A set of all Haar Classifiers to be used in this implementation
+
+A=cell(10,1);
+
+%have some haar classifiers.
+
+
+A{1}=[ -1,-1,-1;
+    -1,-1,-1;
+    -1,-1,-1;
+    +1,+1,+1;
+    +1,+1,+1;
+    +1,+1,+1];
+
+A{2}=[ -1,-1,-1,-1,-1,-1;
+    -1,-1,-1,-1,-1,-1;
+    -1,-1,-1,-1,-1,-1;
+    +1,+1,+1,+1,+1,+1;
+    +1,+1,+1,+1,+1,+1;
+    +1,+1,+1,+1,+1,+1];
+
+
+A{3}= [ -1,-1,-1,-1,-1,-1,-1,-1,-1;
+    -1,-1,-1,-1,-1,-1,-1,-1,-1;
+    -1,-1,-1,-1,-1,-1,-1,-1,-1;
+    +1,+1,+1,+1,+1,+1,+1,+1,+1;
+    +1,+1,+1,+1,+1,+1,+1,+1,+1;
+    +1,+1,+1,+1,+1,+1,+1,+1,+1];
+
+A{4}=[ -1,-1,+1,+1;
+    -1,-1,+1,+1;
+    -1,-1,+1,+1;
+    -1,-1,+1,+1;
+    -1,-1,+1,+1;
+    -1,-1,+1,+1;
+    -1,-1,+1,+1;
+    -1,-1,+1,+1];
+
+A{5}=[ -1,-1,-1,+1,+1,+1;
+    -1,-1,-1,+1,+1,+1;
+    -1,-1,-1,+1,+1,+1;
+    -1,-1,-1,+1,+1,+1;
+    -1,-1,-1,+1,+1,+1;
+    -1,-1,-1,+1,+1,+1;
+    -1,-1,-1,+1,+1,+1;
+    -1,-1,-1,+1,+1,+1];
+
+A{6}=[ -1,-1,-1,-1;
+    -1,-1,-1,-1;
+    -1,-1,-1,-1;
+    -1,-1,-1,-1;
+    +1,+1,+1,+1;
+    +1,+1,+1,+1;
+    +1,+1,+1,+1;
+    +1,+1,+1,+1];
+
+A{7}=[ +1,-1,-1,+1;
+    +1,-1,-1,+1;
+    +1,-1,-1,+1;
+    +1,-1,-1,+1;
+    +1,-1,-1,+1;
+    +1,-1,-1,+1;
+    +1,-1,-1,+1;
+    +1,-1,-1,+1];
+
+A{8}=[ +1,+1,-1,-1,+1,+1;
+    +1,+1,-1,-1,+1,+1;
+    +1,+1,-1,-1,+1,+1;
+    +1,+1,-1,-1,+1,+1;
+    +1,+1,-1,-1,+1,+1;
+    +1,+1,-1,-1,+1,+1;
+    +1,+1,-1,-1,+1,+1;
+    +1,+1,-1,-1,+1,+1];
+
+A{9}=[ +1,+1,-1,-1,-1,+1,+1;
+    +1,+1,-1,-1,-1,+1,+1;
+    +1,+1,-1,-1,-1,+1,+1;
+    +1,+1,-1,-1,-1,+1,+1;
+    +1,+1,-1,-1,-1,+1,+1;
+    +1,+1,-1,-1,-1,+1,+1;
+    +1,+1,-1,-1,-1,+1,+1;
+    +1,+1,-1,-1,-1,+1,+1];
+
+A{10}=[ +1,+1,+1,-1,-1,-1,+1,+1,+1;
+    +1,+1,+1,-1,-1,-1,+1,+1,+1;
+    +1,+1,+1,-1,-1,-1,+1,+1,+1;
+    +1,+1,+1,-1,-1,-1,+1,+1,+1;
+    +1,+1,+1,-1,-1,-1,+1,+1,+1;
+    +1,+1,+1,-1,-1,-1,+1,+1,+1;
+    +1,+1,+1,-1,-1,-1,+1,+1,+1;
+    +1,+1,+1,-1,-1,-1,+1,+1,+1];
+
+
+%% Given
+
+%  we are given example images in face and non-face folder. +1 represents
+% the face image and -1 represents the non-face images.
+% see the attached training images folders in the current directory.
+
+%% 1st step Initialisation
+%weights are initialized.
+l=200; %number of face images.
+m=400; %number of non-face images.
+% weights for face images = 1/(2*l)
+% weights for non-face images = 1/(2*m)
+%group the weights together.
+weights=[ones(l,1)./(2*l);ones(m,1)./(2*m)];
+%%
+
+
+%% 2nd step Main Adaboost Loop
+for t=1:3
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %normalise the weights.
+    weights=weights./(sum(weights));
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    error_list=zeros(1,length(A));
+    beta_list=zeros(1,length(A));
+    threshold=zeros(1,length(A));
+    polarity_list=zeros(1,length(A));
+    
+    
+    %select the best weak classifier with respect to the current weights.
+    for i=1:length(A)
+        
+        [facedata,nonfacedata, ]=data_gen(A{i});
+        
+        data=[facedata;nonfacedata]';
+        
+        % we will plot the data.
+        figure(i)
+        hold on;
+        plot(facedata(:,1),0,'*g','MarkerSize',16);
+        plot(nonfacedata(:,1),0,'.r','MarkerSize',16);
+        axis([-3 3 -0.5 0.5]);
+        
+        
+        %perform pocket on the data obtained from the present haar feature.
+        %[x,error, polarity]= best_classifier(data, weights);
+        [x,error, polarity]= optimal(data, weights);
+        beta=(error/(1-error));
+        
+        
+        hold off;
+        error_list(i)=error;
+        beta_list(i)=beta;
+        threshold(i)=x;
+        polarity_list(i)=polarity;
+        
+        %for a polarity  value of 1, the images on the right side of threshold are faces
+        %for a polarity value of 2, the images on the left side of threshold are
+        %faces
+        
+    end
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %form/define the classifier
+    %a classifier is a haarfeature,threshold,polarity combination
+    
+    
+    [~,best_classifier_index]=min((error_list));
+    theta = (threshold(best_classifier_index));
+    feature = A{best_classifier_index};
+    classifier_polarity = polarity_list(best_classifier_index);
+    classifier_beta=beta_list(best_classifier_index);
+    alpha = log(1/classifier_beta);
+    
+    field1='Feature';
+    field2='Threshold';
+    field3='Polarity';
+    field4='Alpha';
+    
+    s(t) = struct(field1,feature,field2,theta,field3,classifier_polarity,field4,alpha);
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %update the respective weights of the misclassified points.
+    [facedata,nonfacedata, ]=data_gen(A{best_classifier_index});
+    data=[facedata;nonfacedata]';
+    if classifier_polarity==1
+        classifier_output=sign(data(1,:)-theta);
+    else
+        classifier_output=sign(theta-data(1,:));
+    end
+    classifier_output(find(classifier_output==-1))=0;
+    
+    
+    weights=weights.*(classifier_beta.^(classifier_output))';
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    A(best_classifier_index)=[];
+    
+    
+    
+end
+
+%% 3rd step. Make a strong classifier
+% Unimplemented now.
+% form the strong classifier by using the alphas and the classifier from
+% the 2nd step.
+##### SOURCE END #####
+--></body></html>

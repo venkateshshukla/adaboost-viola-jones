@@ -1,0 +1,15 @@
+Simple Adaboost Implementation for Viola Jones Algorithm
+---------------------------------------------------------
+
+This project contains scripts for implementation of Adaboost
+for Viola Jones algorithm for robust dace detection.
+
+The algorithm can be running adaboost.m script.
+
+Documentation as well as code in well commented form can be found in
+html folder.
+
+Images are taken from open source image database, MIT.
+
+This script was used to demonstrate Adaboost in workshops held in Perceptron
+(http://iitbhu.ac.in/prastuti/perceptron) under Prastuti '14.
